@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Treinamento e Download de Modelo em ml5.js</title>
+  <script src="https://cdn.jsdelivr.net/npm/ml5@0.7.0/dist/ml5.min.js"></script>
+</head>
+<body>
+  <button id="train-model">Treinar Modelo</button>
+  <button id="download-model">Download do Modelo</button>
+
+  <script>
+    const trainButton = document.getElementById('train-model');
+    const downloadButton = document.getElementById('download-model');
+
+    let neuralNetwork;
+
+    trainButton.addEventListener('click', trainModel);
+    downloadButton.addEventListener('click', downloadModel);
+
+    function trainModel() {
+	
+	
+      const csvFilePath ='https://raw.githubusercontent.com/JeniferAbdo182/dataset/main/dataset.csv'; // Substitua pelo URL correto do arquivo no GitHub
+
+      fetch(csvFilePath)
+        .then(response => response.text())
+        .then(csvData => {
+          neuralNetwork = ml5.neuralNetwork();
+
+          neuralNetwork.loadData('dataset.csv', csvData, onDataLoaded);
+        })
+        .catch(error => {
+          console.error('Erro ao carregar arquivo:', error);
+        });
+
+      function onDataLoaded() {
+        const trainingOptions = {
+          epochs: 50,
+          batchSize: 12,
+        };
+
+        neuralNetwork.normalizeData();
+        neuralNetwork.train(trainingOptions, onTrainingFinished);
+      }
+
+      function onTrainingFinished() {
+        console.log('Treinamento concluído!');
+        downloadButton.disabled = false;
+      }
+    }
+
+    function downloadModel() {
+      neuralNetwork.save().then((modelData) => {
+        const modelBlob = new Blob([JSON.stringify(modelData)], { type: 'application/json' });
+        const modelURL = URL.createObjectURL(modelBlob);
+        const link = document.createElement('a');
+        link.href = modelURL;
+        link.download = 'model.json';
+        link.click();
+        URL.revokeObjectURL(modelURL);
+      });
+    }
+  </script>
+</body>
+</html>
